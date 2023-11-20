@@ -9,8 +9,7 @@ This Go package provides a convenient way to connect to a PostgreSQL database, f
 1. **Clone this repository:**
 
     ```bash
-    git clone https://github.com/siqueiraa/postgres-connect-go.git
-    ```
+    go get -u  https://github.com/siqueiraa/postgres-connect-go/db
 
 2. **Create a YAML configuration file (`config.yaml`) with your PostgreSQL connection details:**
 
