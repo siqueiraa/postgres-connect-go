@@ -6,7 +6,7 @@ This Go package provides a convenient way to connect to a PostgreSQL database, f
 
 ### 1. Connection Setup
 
-1. **Clone this repository:**
+1. **Import this repository:**
 
     ```bash
     go get -u  https://github.com/siqueiraa/postgres-connect-go/db
