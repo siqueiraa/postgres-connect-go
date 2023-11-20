@@ -1,0 +1,8 @@
+user: user
+password: password
+host: locahost
+port: 5432
+dbname: dbname
+sslmode: disable
+logLevel: error # or "debug", "info", etc.
+
