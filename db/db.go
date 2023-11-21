@@ -119,7 +119,7 @@ func buildConnString(config *DatabaseConfig) string {
 }
 
 func FetchDataFromTable(query string, wg *sync.WaitGroup) ([]map[string]interface{}, error) {
-	inicio := time.Now()
+	//inicio := time.Now()
 
 	// Acquire a connection from the pool
 	conn, err := Pool.Acquire(context.Background())
@@ -173,12 +173,13 @@ func FetchDataFromTable(query string, wg *sync.WaitGroup) ([]map[string]interfac
 		result = append(result, entry)
 	}
 
-	fim := time.Now()
-	// Calculate the time difference
-	tempoDecorrido := fim.Sub(inicio)
+	/*
+		fim := time.Now()
+		// Calculate the time difference
+		tempoDecorrido := fim.Sub(inicio)
 
-	// Display the elapsed time
-	fmt.Printf("Select took %s to execute\n", tempoDecorrido)
+		// Display the elapsed time
+		fmt.Printf("Select took %s to execute\n", tempoDecorrido)*/
 
 	result = formataToNativeType(result)
 
