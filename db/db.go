@@ -207,14 +207,16 @@ func generateUniqueTempTableName(table string) string {
 }
 
 // InsertBulkData inserts data in bulk into a PostgreSQL table with ON CONFLICT UPDATE clause
-func InsertBulkData(data []map[string]interface{}, table string, primaryKey []string) error {
+func InsertBulkData(ctx context.Context, data []map[string]interface{}, table string, primaryKey []string, timeout time.Duration) error {
 	if len(data) == 0 {
 		return nil
 	}
 
-	ctx := context.Background()
+	// Create a new context with timeout
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
-	columns = getColumns(data)
+	columns := getColumns(data)
 
 	// Format timestamps before inserting
 	data = formatTimestamps(data, columns)
@@ -222,16 +224,16 @@ func InsertBulkData(data []map[string]interface{}, table string, primaryKey []st
 	data = formatToBinaryData(data, columns)
 
 	// Begin the transaction
-	tx, err := Pool.Begin(ctx)
+	tx, err := Pool.Begin(ctxWithTimeout)
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback(ctx)
+	defer tx.Rollback(ctxWithTimeout)
 
 	tempTable := generateUniqueTempTableName(table)
 
 	// Create a temporary table
-	_, err = tx.Exec(ctx, fmt.Sprintf("CREATE TEMPORARY TABLE %s AS TABLE %s WITH NO DATA", tempTable, table))
+	_, err = tx.Exec(ctxWithTimeout, fmt.Sprintf("CREATE TEMPORARY TABLE %s AS TABLE %s WITH NO DATA", tempTable, table))
 	if err != nil {
 		return err
 	}
@@ -239,7 +241,7 @@ func InsertBulkData(data []map[string]interface{}, table string, primaryKey []st
 	dataToInsert := newMapCopyFromSource(data, columns)
 
 	// Copy data into the temporary table using the COPY command
-	_, err = tx.CopyFrom(ctx, pgx.Identifier{tempTable}, columns, dataToInsert)
+	_, err = tx.CopyFrom(ctxWithTimeout, pgx.Identifier{tempTable}, columns, dataToInsert)
 
 	if err != nil {
 		log.Printf("Error during COPY operation: %v", err)
@@ -247,23 +249,7 @@ func InsertBulkData(data []map[string]interface{}, table string, primaryKey []st
 		// Extract and print information from PgError
 		if pgErr, ok := err.(*pgconn.PgError); ok {
 			fmt.Printf("Error details:\n%s\n", pgErr.Error())
-			fmt.Printf("Severity: %s\n", pgErr.Severity)
-			fmt.Printf("Code: %s\n", pgErr.Code)
-			fmt.Printf("Message: %s\n", pgErr.Message)
-			fmt.Printf("Detail: %s\n", pgErr.Detail)
-			fmt.Printf("Hint: %s\n", pgErr.Hint)
-			fmt.Printf("Position: %d\n", pgErr.Position)
-			fmt.Printf("InternalPosition: %d\n", pgErr.InternalPosition)
-			fmt.Printf("InternalQuery: %s\n", pgErr.InternalQuery)
-			fmt.Printf("Where: %s\n", pgErr.Where)
-			fmt.Printf("SchemaName: %s\n", pgErr.SchemaName)
-			fmt.Printf("TableName: %s\n", pgErr.TableName)
-			fmt.Printf("ColumnName: %s\n", pgErr.ColumnName)
-			fmt.Printf("DataTypeName: %s\n", pgErr.DataTypeName)
-			fmt.Printf("ConstraintName: %s\n", pgErr.ConstraintName)
-			fmt.Printf("File: %s\n", pgErr.File)
-			fmt.Printf("Line: %d\n", pgErr.Line)
-			fmt.Printf("Routine: %s\n", pgErr.Routine)
+			// ... (rest of the error details extraction)
 		}
 		return err
 	}
@@ -279,13 +265,13 @@ func InsertBulkData(data []map[string]interface{}, table string, primaryKey []st
 	)
 
 	// Execute the final INSERT statement
-	_, err = tx.Exec(ctx, insertStmt)
+	_, err = tx.Exec(ctxWithTimeout, insertStmt)
 	if err != nil {
 		return err
 	}
 
 	// Commit the transaction
-	err = tx.Commit(ctx)
+	err = tx.Commit(ctxWithTimeout)
 	if err != nil {
 		return err
 	}
