@@ -32,6 +32,7 @@ type DatabaseConfig struct {
 	DBName   string `yaml:"dbname"`
 	SSLMode  string `yaml:"sslmode"`
 	LogLevel string `yaml:"logLevel"`
+	NATSURL  string `yaml:"nats_url"`
 }
 
 // CustomLogger is a custom logger that satisfies the pgx.Logger interface
