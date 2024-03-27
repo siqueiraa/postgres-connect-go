@@ -18,7 +18,6 @@ import (
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/shopspring/decimal"
-	"gopkg.in/yaml.v2"
 )
 
 var Pool *pgxpool.Pool
@@ -48,14 +47,8 @@ func (cl *CustomLogger) Log(ctx context.Context, level pgx.LogLevel, msg string,
 	}
 }
 
-func InitDB() error {
+func InitDB(config *DatabaseConfig) error {
 	ctx := context.Background()
-
-	// Read PostgreSQL connection details from YAML file
-	config, err := readConfig("config.yaml")
-	if err != nil {
-		return fmt.Errorf("error reading YAML config: %v", err)
-	}
 
 	// Map log level values from the config file to pgx.LogLevel constants
 	logLevelMapping := map[string]pgx.LogLevel{
@@ -95,21 +88,6 @@ func InitDB() error {
 	}
 
 	return nil
-}
-
-// readConfig reads the YAML file and unmarshals it into a DatabaseConfig struct
-func readConfig(filename string) (*DatabaseConfig, error) {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	var config DatabaseConfig
-	if err := yaml.Unmarshal(data, &config); err != nil {
-		return nil, err
-	}
-
-	return &config, nil
 }
 
 // buildConnString builds the PostgreSQL connection string from the DatabaseConfig
