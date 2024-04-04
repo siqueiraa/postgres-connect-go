@@ -345,7 +345,8 @@ func formatToBinaryData(data []map[string]interface{}, columnOrder []string) []m
 			case int:
 				newRow[col] = int32(v)
 			case bool:
-				newRow[col] = boolToInt(v)
+				//newRow[col] = boolToInt(v)
+				newRow[col] = pgtype.Bool{Bool: v, Status: pgtype.Present}
 			case string:
 				if col == "time" {
 					// Parse the string as time
