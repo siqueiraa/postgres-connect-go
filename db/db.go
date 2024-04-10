@@ -227,14 +227,14 @@ func InsertBulkData(ctx context.Context, data []map[string]interface{}, table st
 
 		// Extract and print information from PgError
 		if pgErr, ok := err.(*pgconn.PgError); ok {
-			fmt.Printf("Error details:\n%s\n", pgErr.Error())
+			log.Printf("Error details:\n%s\n", pgErr.Error())
 			// ... (rest of the error details extraction)
 		}
 		return err
 	}
 
 	// Construct the final INSERT statement with ON CONFLICT UPDATE
-	insertStmt := fmt.Sprintf("INSERT INTO %s (%s) SELECT %s FROM %s ON CONFLICT (%s) DO UPDATE SET %s",
+	insertStmt := fmt.Sprintf("INSERT INTO %s (%s) SELECT DISTINCT %s FROM %s ON CONFLICT (%s) DO UPDATE SET %s",
 		table,
 		strings.Join(columns, ", "),
 		strings.Join(columns, ", "),
